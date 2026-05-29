@@ -1,21 +1,28 @@
 {
   "name": "mongo-collection-cleaner",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Interactive CLI tool to drop multiple MongoDB collections at once",
   "type": "module",
   "main": "index.js",
   "bin": {
-    "mcc": "./index.js"
+    "mcc": "index.js"
   },
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": ["mongodb", "cli", "database", "collections", "drop", "cleanup"],
+  "keywords": [
+    "mongodb",
+    "cli",
+    "database",
+    "collections",
+    "drop",
+    "cleanup"
+  ],
   "author": "talhaozbek61",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/talhaozbek61/mongo-collection-cleaner.git"
+    "url": "git+https://github.com/talhaozbek61/mongo-collection-cleaner.git"
   },
   "homepage": "https://github.com/talhaozbek61/mongo-collection-cleaner#readme",
   "bugs": {
