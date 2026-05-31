@@ -19,6 +19,24 @@ const DEFAULT_COLLECTIONS = process.env.MONGO_COLLECTIONS
   ? process.env.MONGO_COLLECTIONS.split(",").map((c) => c.trim())
   : [];
 
+// ─── Colors ───────────────────────────────────────────────────────────────────
+const c = {
+  reset: "\x1b[0m",
+  bold: "\x1b[1m",
+  dim: "\x1b[2m",
+  cyan: "\x1b[36m",
+  green: "\x1b[32m",
+  red: "\x1b[31m",
+  white: "\x1b[97m",
+};
+
+const cyan = (s) => `${c.cyan}${s}${c.reset}`;
+const boldCyan = (s) => `${c.bold}${c.cyan}${s}${c.reset}`;
+const dim = (s) => `${c.dim}${s}${c.reset}`;
+const green = (s) => `${c.green}${s}${c.reset}`;
+const red = (s) => `${c.red}${s}${c.reset}`;
+const boldRed = (s) => `${c.bold}${c.red}${s}${c.reset}`;
+
 // ─── Readline interface ───────────────────────────────────────────────────────
 const rl = readline.createInterface({
   input: process.stdin,
@@ -34,7 +52,7 @@ function ask(question) {
 
 // Shows the current value and asks the user to confirm or enter a new one
 async function confirmDefault(label, currentVal) {
-  console.log(`\n  ${label}: ${currentVal || "(empty)"}`);
+  console.log(`\n  ${dim(label + ":")} ${currentVal || dim("(empty)")}`);
   const choice = await ask("  Use this? (Y/n): ");
   if (choice.toLowerCase() === "n") {
     return await ask(`  Enter ${label}: `);
@@ -47,16 +65,22 @@ async function confirmDefault(label, currentVal) {
 async function getCollections() {
   if (DEFAULT_COLLECTIONS.length === 0) {
     const input = await ask("\n  Enter collection names (comma-separated): ");
-    return input.split(",").map((c) => c.trim()).filter(Boolean);
+    return input
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
   }
 
-  console.log("\n  Default collections:");
-  DEFAULT_COLLECTIONS.forEach((c) => console.log(`    • ${c}`));
+  console.log(`\n  ${dim("Default collections:")}`);
+  DEFAULT_COLLECTIONS.forEach((c) => console.log(`    ${dim("•")} ${c}`));
   const choice = await ask("  Use this list? (Y/n): ");
 
   if (choice.toLowerCase() === "n") {
     const input = await ask("  Enter collection names (comma-separated): ");
-    return input.split(",").map((c) => c.trim()).filter(Boolean);
+    return input
+      .split(",")
+      .map((c) => c.trim())
+      .filter(Boolean);
   }
 
   return [...DEFAULT_COLLECTIONS];
@@ -64,14 +88,18 @@ async function getCollections() {
 
 // Prints a formatted summary of everything the user configured before final confirmation
 function printSummary(uri, dbName, collections) {
-  const line = "─".repeat(50);
+  const line = cyan("─".repeat(50));
   console.log(`\n${line}`);
-  console.log(`  URI:        ${uri}`);
-  console.log(`  Database:   ${dbName}`);
-  console.log(`  Collections to DROP (${collections.length}):`);
-  collections.forEach((c) => console.log(`    • ${c}`));
+  console.log(`  ${dim("URI:")}        ${uri}`);
+  console.log(`  ${dim("Database:")}   ${dbName}`);
+  console.log(
+    `  ${dim("Collections to DROP")} ${dim("(" + collections.length + ")")}:`,
+  );
+  collections.forEach((c) => console.log(`    ${red("•")} ${c}`));
   console.log(line);
-  console.log("  ⚠  This will PERMANENTLY delete the above collections.");
+  console.log(
+    `  ${boldRed("⚠")}  ${boldRed("This will PERMANENTLY delete the above collections.")}`,
+  );
   console.log(line);
 }
 
@@ -81,59 +109,64 @@ async function connectAndDrop(uri, dbName, collections) {
 
   try {
     await client.connect();
-    console.log("\n  Connected to MongoDB.\n");
+    console.log(`\n  ${dim("Connected to MongoDB.")}\n`);
 
     const db = client.db(dbName);
 
     for (const name of collections) {
       try {
         await db.collection(name).drop();
-        console.log(`  ✓ Dropped: ${name}`);
+        console.log(`  ${green("✓ Dropped:")} ${name}`);
       } catch (err) {
         // Collection may not exist — treat as a warning, not a fatal error
-        console.log(`  ✗ Skipped: ${name} (${err.message})`);
+        console.log(
+          `  ${red("✗ Skipped:")} ${name} ${dim("(" + err.message + ")")}`,
+        );
       }
     }
   } finally {
     await client.close();
-    console.log("\n  Disconnected. Done.\n");
+    console.log(`\n  ${dim("Disconnected. Done.")}\n`);
   }
 }
 
 // Main flow: gathers all user input, shows summary, and runs the drop if confirmed
 async function main() {
-  console.log("\n══════════════════════════════════════════════════");
-  console.log("       MongoDB Collection Cleaner");
-  console.log("══════════════════════════════════════════════════\n");
+  const border = cyan("══════════════════════════════════════════════════");
+  console.log(`\n${border}`);
+  console.log(boldCyan("       MongoDB Collection Cleaner"));
+  console.log(`${border}\n`);
 
   // Step 1 — MongoDB URI
-  console.log("Step 1 — MongoDB URI");
+  console.log(boldCyan("Step 1 — MongoDB URI"));
   const uri = await confirmDefault("URI", DEFAULT_URI);
 
   // Step 2 — Database name
-  console.log("\nStep 2 — Database Name");
+  console.log(`\n${boldCyan("Step 2 — Database Name")}`);
   let dbName = await confirmDefault("Database", DEFAULT_DB);
   while (!dbName) {
-    console.log("  Database name cannot be empty.");
+    console.log(red("  Database name cannot be empty."));
     dbName = await ask("  Enter database name: ");
   }
 
   // Step 3 — Collections
-  console.log("\nStep 3 — Collections to Drop");
+  console.log(`\n${boldCyan("Step 3 — Collections to Drop")}`);
   const collections = await getCollections();
 
   if (collections.length === 0) {
-    console.log("\n  No collections selected. Exiting.");
+    console.log(`\n  ${red("No collections selected. Exiting.")}`);
     rl.close();
     return;
   }
 
   // Step 4 — Summary & final confirmation
   printSummary(uri, dbName, collections);
-  const confirm = await ask('\n  Type "yes" to confirm and proceed: ');
+  const confirm = await ask(
+    `\n  Type ${boldCyan('"yes"')} to confirm and proceed: `,
+  );
 
   if (confirm !== "yes") {
-    console.log("\n  Aborted. No changes were made.\n");
+    console.log(`\n  ${dim("Aborted. No changes were made.")}\n`);
     rl.close();
     return;
   }
@@ -145,6 +178,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  console.error("\n  Fatal error:", err.message);
+  console.error(red("\n  Fatal error:"), err.message);
   process.exit(1);
 });

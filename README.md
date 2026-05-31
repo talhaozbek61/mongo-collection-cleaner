@@ -4,9 +4,15 @@ Interactive CLI tool to drop multiple MongoDB collections at once.
 
 ## Install
 
+> **Global installation is required** for the `mcc` command to be available in your terminal.
+
 ```bash
 npm install -g mongo-collection-cleaner
 ```
+
+## Demo
+
+![demo](https://eu-west-2.graphassets.com/cm5irx37x0kxf07mkap4yaxi5/cmptnnwk1233f07l4v80l6zkf)
 
 ## Usage
 
@@ -30,7 +36,7 @@ Create a `.env` file **in the same directory where `mcc` is installed** (i.e. ne
 ```env
 MONGO_URI=mongodb://localhost:27017
 MONGO_DB=myDatabase
-MONGO_COLLECTIONS=classrooms,courses,departments,exams,examPrograms,teachers,enrollments
+MONGO_COLLECTIONS=home,employees
 ```
 
 To find the install location:
