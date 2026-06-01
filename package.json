@@ -1,6 +1,6 @@
 {
   "name": "mongo-collection-cleaner",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Interactive CLI tool to drop multiple MongoDB collections at once",
   "type": "module",
   "main": "index.js",
